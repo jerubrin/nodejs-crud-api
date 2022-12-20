@@ -1,0 +1,30 @@
+{
+  "name": "nodejs-crud-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "test": "test",
+    "start:dev": "npx nodemon ./server.ts",
+    "start:prod": "tsc && node ./build/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jerubrin/nodejs-crud-api.git"
+  },
+  "author": "Alexey Kuptsov (kuptsovalexey@mail.ru)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jerubrin/nodejs-crud-api/issues"
+  },
+  "homepage": "https://github.com/jerubrin/nodejs-crud-api#readme",
+  "devDependencies": {
+    "@types/node": "^18.11.17",
+    "@types/uuid": "^9.0.0",
+    "dotenv": "^16.0.3",
+    "nodemon": "^2.0.20",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.4",
+    "uuid": "^9.0.0"
+  }
+}
