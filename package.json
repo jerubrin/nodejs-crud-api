@@ -5,8 +5,8 @@
   "main": "index.ts",
   "scripts": {
     "test": "test",
-    "start:dev": "npx nodemon ./server.ts",
-    "start:prod": "tsc && node ./build/index.js"
+    "start:dev": "npx nodemon ./src/server.ts",
+    "start:prod": "webpack && node ./bundle/server.js"
   },
   "repository": {
     "type": "git",
@@ -23,8 +23,12 @@
     "@types/uuid": "^9.0.0",
     "dotenv": "^16.0.3",
     "nodemon": "^2.0.20",
+    "ts-loader": "^9.4.2",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.4",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
+    "webpack-node-externals": "^3.0.0"
   }
 }
