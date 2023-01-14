@@ -8,7 +8,7 @@ module.exports = {
     extensions: ['.js', '.jsx', '.ts', '.tsx'],
   },
   externals: [nodeExternals()],
-  entry: './src/server.ts',
+  entry: './src/cluster.ts',
   output: {
     path: path.join(__dirname, 'bundle'), // this can be any path and directory you want
     filename: 'server.js',
