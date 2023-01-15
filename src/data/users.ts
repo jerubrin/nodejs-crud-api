@@ -1,3 +1,4 @@
+import { copyFileSync } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { validate as uuidValidate } from 'uuid';
 
@@ -22,10 +23,18 @@ export class Users {
 
   public addUser(user: Partial<User>): ResUser {
     user.id = uuidv4();
-    if ( !user.username || !user.username.trim() || !user.age ) {
+
+    const isCorrectArr = ((user.hobbies instanceof Array) && user.hobbies.length > 0) 
+      ? user.hobbies.every(hobbie => typeof hobbie === 'string' ) 
+      : user.hobbies instanceof Array;
+
+    if ( !(typeof user.username === 'string')
+      || !user.username.trim()
+      || !(typeof user.age === 'number')
+      || !isCorrectArr)
+    {
       return { code: 400, data: 'Invalid input! Please check input value.' };
     }
-    if (!user.hobbies) user.hobbies = [];
     this.users.push(user as User);
     return { code: 201, data: user as User };
   }
@@ -36,9 +45,13 @@ export class Users {
     }
     const i = this.users.findIndex(_user => _user.id == user.id);
     if (i < 0) return { code: 404, data: 'Error: User not found!' };
-    if (user.username) this.users[i].username = user.username;
-    if (user.age) this.users[i].age = user.age;
-    if (user.hobbies) this.users[i].hobbies = user.hobbies;
+    if (typeof user.username == 'string') this.users[i].username = user.username;
+    if (typeof user.age == 'number') this.users[i].age = user.age;
+    if (user.hobbies instanceof Array) {
+      user.hobbies.forEach(hobbie => {
+        if (!user.hobbies.includes(hobbie)) this.users[i].hobbies.push(hobbie);
+      });
+    }
     return { code: 200, data: this.users[i] };
   }
 
@@ -50,9 +63,8 @@ export class Users {
     if (i < 0) return { code: 404, data: 'Error: User not found!' }
     const user = this.users[i];
     this.users.splice(i, 1);
-    return { code: 200, data: user }
+    return { code: 204, data: user }
   }
-
 }
 
 export interface User {
