@@ -5,7 +5,7 @@ import { errorHandlerr } from './error-handler';
 import { messageHandler } from './data/database';
 import { createServer } from './server';
 
-const port = Number(process.env.PORT);
+const port = Number(process.env.PORT) || 3000;
 
 export let dbWorker: Worker;
 
