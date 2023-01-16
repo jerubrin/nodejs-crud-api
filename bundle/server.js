@@ -2,113 +2,6 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 901:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.dbWorker = void 0;
-const cluster_1 = __importDefault(__webpack_require__(1));
-const http_1 = __importDefault(__webpack_require__(685));
-const os_1 = __webpack_require__(37);
-const error_handler_1 = __webpack_require__(939);
-const database_1 = __webpack_require__(422);
-const server_1 = __webpack_require__(728);
-const port = Number(process.env.PORT);
-if (cluster_1.default.isPrimary) {
-    console.log(`Master is started! CPU-cors cout: ${(0, os_1.cpus)().length}`);
-    let activeWorkerPort = port + 1;
-    // dbWorker = new Worker('./src/data/database.ts');
-    const children = [];
-    for (let i = 0; i < (0, os_1.cpus)().length; i++) {
-        const workerEnv = { port: (port + i + 1).toString() };
-        const createNewWorker = () => {
-            const child = cluster_1.default.fork(workerEnv);
-            child.on('message', message => {
-                child.send((0, database_1.messageHandler)(message));
-            });
-            child.on('exit', (code) => {
-                if (code !== 0) {
-                    children[i] = createNewWorker();
-                }
-            });
-            return child;
-        };
-        const child = createNewWorker();
-        children.push(child);
-    }
-    const mainServer = http_1.default.createServer((request, response) => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-            const httpRequest = http_1.default.request({
-                hostname: 'localhost',
-                port: activeWorkerPort,
-                path: request.url,
-                method: request.method,
-                headers: request.headers,
-            }, (res) => {
-                const data = [];
-                res.on('data', (chunk) => {
-                    data.push(chunk);
-                });
-                res.on('end', () => {
-                    response.statusCode = res.statusCode;
-                    if (response.statusCode.toString()[0] === '2') {
-                        response.setHeader('Content-type', 'application/json');
-                    }
-                    else {
-                        response.setHeader('Content-type', 'text/plain');
-                    }
-                    if (res.statusCode != 200) {
-                        response.statusMessage = res.statusMessage;
-                    }
-                    response.write(data.join().toString());
-                    response.end();
-                });
-                res.on('error', () => (0, error_handler_1.errorHandlerr)(response));
-            });
-            httpRequest.on('error', () => (0, error_handler_1.errorHandlerr)(response));
-            const data = [];
-            request.on('data', (chunk) => {
-                data.push(chunk);
-            });
-            request.on('end', () => {
-                httpRequest.end(data.join().toString());
-            });
-            request.on('error', () => (0, error_handler_1.errorHandlerr)(response));
-        }
-        catch (_a) {
-            (0, error_handler_1.errorHandlerr)(response);
-        }
-        activeWorkerPort = (activeWorkerPort < port + (0, os_1.cpus)().length) ? activeWorkerPort + 1 : port + 1;
-    }));
-    mainServer.listen(port, 'localhost', () => {
-        console.log(`Main server listening port ${port}`);
-    });
-}
-if (cluster_1.default.isWorker) {
-    const workerPort = +process.env['port'];
-    const server = http_1.default.createServer(server_1.createServer);
-    server.listen(workerPort, 'localhost', () => {
-        console.log(`Worker started! Listening port ${workerPort}`);
-    });
-    server.on('connection', socket => console.log(`Incoming Connectcion! Port: ${socket.localPort}`));
-}
-
-
-/***/ }),
-
 /***/ 422:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
@@ -185,26 +78,22 @@ class Users {
         return { code: 201, data: user };
     }
     updateUser(user) {
-        const isCorrectArr = ((user.hobbies instanceof Array) && user.hobbies.length > 0)
-            ? user.hobbies.every(hobbie => typeof hobbie === 'string')
-            : user.hobbies instanceof Array;
-        if (!user.id
-            || !(0, uuid_2.validate)(user.id)
-            || !(typeof user.username == 'string')
-            || !user.username.trim()
-            || !(typeof user.age == 'number')
-            || !isCorrectArr) {
+        if (!user.id || !(0, uuid_2.validate)(user.id)) {
             return { code: 400, data: 'Invalid ID! Please check input value.' };
         }
         const i = this.users.findIndex(_user => _user.id == user.id);
         if (i < 0)
             return { code: 404, data: 'Error: User not found!' };
-        if (user.username)
+        if (typeof user.username == 'string')
             this.users[i].username = user.username;
-        if (user.age)
+        if (typeof user.age == 'number')
             this.users[i].age = user.age;
-        if (user.hobbies)
-            this.users[i].hobbies = user.hobbies;
+        if (user.hobbies instanceof Array) {
+            user.hobbies.forEach(hobbie => {
+                if (!user.hobbies.includes(hobbie))
+                    this.users[i].hobbies.push(hobbie);
+            });
+        }
         return { code: 200, data: this.users[i] };
     }
     deleteUser(id) {
@@ -240,6 +129,27 @@ const errorHandlerr = (response) => {
     response.end();
 };
 exports.errorHandlerr = errorHandlerr;
+
+
+/***/ }),
+
+/***/ 607:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.server = void 0;
+const http_1 = __importDefault(__webpack_require__(685));
+const server_1 = __webpack_require__(728);
+const port = Number(process.env.PORT);
+exports.server = http_1.default.createServer(server_1.createServer);
+exports.server.listen(port, 'localhost', () => {
+    console.log(`Server started! Listening port ${port}`);
+});
+exports.server.on('connection', socket => console.log(`Incoming Connectcion! Port: ${socket.localPort}`));
 
 
 /***/ }),
@@ -306,7 +216,12 @@ const writeToResponse = (res, data) => {
     }
     if (data.code.toString()[0] === '2') {
         res.setHeader('Content-type', 'application/json');
-        res.write(JSON.stringify(data.data));
+        try {
+            res.write(JSON.stringify(data.data));
+        }
+        catch (_a) {
+            (0, error_handler_1.errorHandlerr)(res);
+        }
     }
     else {
         res.setHeader('Content-type', 'text/plain');
@@ -360,13 +275,21 @@ const createServer = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             let body = '';
             req.on('data', (chunk) => body += chunk);
             req.on('end', function () {
-                const messageData = { method: database_1.MessageMethod.addUser, param: JSON.parse(body) };
-                if (cluster_1.default.isWorker) {
-                    process.send(messageData);
+                try {
+                    const messageData = { method: database_1.MessageMethod.addUser, param: JSON.parse(body) };
+                    if (cluster_1.default.isWorker) {
+                        process.send(messageData);
+                    }
+                    else {
+                        responseData(messageData, res);
+                    }
                 }
-                else {
-                    responseData(messageData, res);
+                catch (_a) {
+                    (0, error_handler_1.errorHandlerr)(res);
                 }
+            });
+            req.on('error', () => {
+                (0, error_handler_1.errorHandlerr)(res);
             });
         }
         else if (req.method === method.put && ((_d = req.url) === null || _d === void 0 ? void 0 : _d.indexOf(USERS_URL)) == 0) {
@@ -380,16 +303,24 @@ const createServer = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                     res404(res);
                 }
                 else {
-                    const user = JSON.parse(body);
-                    user.id = id;
-                    const messageData = { method: database_1.MessageMethod.updateUser, param: user };
-                    if (cluster_1.default.isWorker) {
-                        process.send(messageData);
+                    try {
+                        const user = JSON.parse(body);
+                        user.id = id;
+                        const messageData = { method: database_1.MessageMethod.updateUser, param: user };
+                        if (cluster_1.default.isWorker) {
+                            process.send(messageData);
+                        }
+                        else {
+                            responseData(messageData, res);
+                        }
                     }
-                    else {
-                        responseData(messageData, res);
+                    catch (_b) {
+                        (0, error_handler_1.errorHandlerr)(res);
                     }
                 }
+            });
+            req.on('error', () => {
+                (0, error_handler_1.errorHandlerr)(res);
             });
         }
         else if (req.method === method.delete && ((_e = req.url) === null || _e === void 0 ? void 0 : _e.indexOf(USERS_URL)) == 0) {
@@ -458,13 +389,6 @@ module.exports = require("cluster");
 
 module.exports = require("http");
 
-/***/ }),
-
-/***/ 37:
-/***/ ((module) => {
-
-module.exports = require("os");
-
 /***/ })
 
 /******/ 	});
@@ -498,7 +422,7 @@ module.exports = require("os");
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __webpack_require__(901);
+/******/ 	var __webpack_exports__ = __webpack_require__(607);
 /******/ 	
 /******/ })()
 ;
