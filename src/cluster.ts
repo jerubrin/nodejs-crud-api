@@ -8,6 +8,7 @@ import { createServer } from './server';
 
 dotenv.config()
 const port = Number(process.env.PORT) || 3000;
+const host = process.env.HOST || 'localhost';
 
 export let dbWorker: Worker;
 
@@ -84,7 +85,7 @@ if (cluster.isPrimary) {
         
         activeWorkerPort = (activeWorkerPort < port + cpus().length) ? activeWorkerPort + 1 : port + 1;
     });
-    mainServer.listen(port, 'localhost', () => {
+    mainServer.listen(port, host, () => {
         console.log(`Main server listening port ${port}`);
     });
 }

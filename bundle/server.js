@@ -52,6 +52,7 @@ const database_1 = __webpack_require__(422);
 const server_1 = __webpack_require__(728);
 dotenv.config();
 const port = Number(process.env.PORT) || 3000;
+const host = process.env.HOST || 'localhost';
 if (cluster_1.default.isPrimary) {
     console.log(`Master is started! CPU-cors cout: ${(0, os_1.cpus)().length}`);
     let activeWorkerPort = port + 1;
@@ -118,7 +119,7 @@ if (cluster_1.default.isPrimary) {
         }
         activeWorkerPort = (activeWorkerPort < port + (0, os_1.cpus)().length) ? activeWorkerPort + 1 : port + 1;
     }));
-    mainServer.listen(port, 'localhost', () => {
+    mainServer.listen(port, host, () => {
         console.log(`Main server listening port ${port}`);
     });
 }
