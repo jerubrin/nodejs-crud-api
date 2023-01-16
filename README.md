@@ -33,15 +33,23 @@ npm update npm -g
 There is 3 different modes for running http-server:
 
 1. Run in development mode (using `nodemon`):
-```npm run start:dev```
+```bash
+npm run start:dev
+```
 You will receive a message about the successful start of the server and the number of the listening port.
+
 `Server started! Listening port 5050`
+
 After this message this http-server is ready to use.
 
 2. Run in development mode (using `webpack`):
-```npm run start:prod```
+```bash
+npm run start:prod
+```
 You will receive a message about the successful start of the server and the number of the listening port.
+
 `Server started! Listening port 5050`
+
 After this message this http-server is ready to use.
 
 3. Run in production mode (using `webpack`):
@@ -49,12 +57,19 @@ After this message this http-server is ready to use.
 npm run start:multi
 ```
 You will receive a messages about the number of processor cores and about the successful start of the server and the number of the listening port.
+
 `Master is started! CPU-cors cout: __`
+
 `Main server listening port 5050`
+
 Then, you will receive messages about the successful launch of child professions by the number of processor cores:
+
 `Worker started! Listening port 5051`
+
 `Worker started! Listening port 5052`
+
 `...`
+
 After this messages this http-server is ready to use.
 
 ## Change server port
