@@ -1,6 +1,8 @@
+import * as dotenv from 'dotenv';
 import http from "http";
 import { createServer } from "./server";
 
+dotenv.config()
 const port = Number(process.env.PORT) || 3000;
 
 export const server = http.createServer(createServer);

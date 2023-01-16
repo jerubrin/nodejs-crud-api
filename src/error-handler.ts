@@ -1,10 +1,11 @@
 import http from 'http';
 
 export const errorHandlerr = (response: http.ServerResponse) => {
-    response.statusCode = 500
-    const message = 'Internal Server Error! Sorry... Please try later. :('
-    response.statusMessage = message
-    response.write(message);
+    const message = 'Internal Server Error! Sorry... Please try later. :(';
     console.error(message);
+    response.setHeader('Content-type', 'text/plain');
+    response.statusCode = 500;
+    response.statusMessage = message;
+    response.write(message);
     response.end();
 };

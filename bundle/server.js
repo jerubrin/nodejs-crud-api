@@ -6,6 +6,29 @@
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -20,12 +43,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.dbWorker = void 0;
+const dotenv = __importStar(__webpack_require__(142));
 const cluster_1 = __importDefault(__webpack_require__(1));
 const http_1 = __importDefault(__webpack_require__(685));
 const os_1 = __webpack_require__(37);
 const error_handler_1 = __webpack_require__(939);
 const database_1 = __webpack_require__(422);
 const server_1 = __webpack_require__(728);
+dotenv.config();
 const port = Number(process.env.PORT) || 3000;
 if (cluster_1.default.isPrimary) {
     console.log(`Master is started! CPU-cors cout: ${(0, os_1.cpus)().length}`);
@@ -228,11 +253,12 @@ exports.usersDB = new Users();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.errorHandlerr = void 0;
 const errorHandlerr = (response) => {
-    response.statusCode = 500;
     const message = 'Internal Server Error! Sorry... Please try later. :(';
+    console.error(message);
+    response.setHeader('Content-type', 'text/plain');
+    response.statusCode = 500;
     response.statusMessage = message;
     response.write(message);
-    console.error(message);
     response.end();
 };
 exports.errorHandlerr = errorHandlerr;
@@ -244,29 +270,6 @@ exports.errorHandlerr = errorHandlerr;
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -281,11 +284,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createServer = void 0;
-const dotenv = __importStar(__webpack_require__(142));
 const error_handler_1 = __webpack_require__(939);
 const database_1 = __webpack_require__(422);
 const cluster_1 = __importDefault(__webpack_require__(1));
-dotenv.config();
 const USERS_URL = '/api/users/';
 const USERS_URL_SHORT = '/api/users';
 var method;
@@ -371,7 +372,13 @@ const createServer = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                     }
                 }
                 catch (_a) {
-                    (0, error_handler_1.errorHandlerr)(res);
+                    const messageData = { method: database_1.MessageMethod.addUser, param: {} };
+                    if (cluster_1.default.isWorker) {
+                        process.send(messageData);
+                    }
+                    else {
+                        responseData(messageData, res);
+                    }
                 }
             });
             req.on('error', () => {
@@ -401,7 +408,13 @@ const createServer = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                         }
                     }
                     catch (_b) {
-                        (0, error_handler_1.errorHandlerr)(res);
+                        const messageData = { method: database_1.MessageMethod.addUser, param: {} };
+                        if (cluster_1.default.isWorker) {
+                            process.send(messageData);
+                        }
+                        else {
+                            responseData(messageData, res);
+                        }
                     }
                 }
             });
@@ -430,9 +443,6 @@ const createServer = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         }
     }
     catch (_g) {
-        if (cluster_1.default.isWorker) {
-            process.send({ method: 'error' });
-        }
         (0, error_handler_1.errorHandlerr)(res);
     }
     if (cluster_1.default.isWorker) {

@@ -1,3 +1,4 @@
+import * as dotenv from 'dotenv';
 import cluster, { Worker } from 'cluster';
 import http from 'http';
 import { cpus } from 'os';
@@ -5,6 +6,7 @@ import { errorHandlerr } from './error-handler';
 import { messageHandler } from './data/database';
 import { createServer } from './server';
 
+dotenv.config()
 const port = Number(process.env.PORT) || 3000;
 
 export let dbWorker: Worker;

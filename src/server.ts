@@ -1,11 +1,9 @@
-import * as dotenv from 'dotenv';
 import { ResUser, User, usersDB } from './data/users';
 import http from 'http';
 import { errorHandlerr } from './error-handler';
 import { MessageData, messageHandler, MessageMethod } from './data/database';
 import cluster from 'cluster';
 
-dotenv.config()
 const USERS_URL = '/api/users/';
 const USERS_URL_SHORT = '/api/users';
 enum method {
@@ -84,7 +82,12 @@ export const createServer = async (req: http.IncomingMessage, res: http.ServerRe
                         responseData(messageData, res);
                     }
                 } catch {
-                    errorHandlerr(res);
+                    const messageData: MessageData = { method: MessageMethod.addUser, param: {} };
+                    if (cluster.isWorker) {
+                        process.send(messageData);
+                    } else {
+                        responseData(messageData, res);
+                    }
                 }
             });
             req.on('error', () => {
@@ -109,7 +112,12 @@ export const createServer = async (req: http.IncomingMessage, res: http.ServerRe
                             responseData(messageData, res);
                         }
                     } catch {
-                        errorHandlerr(res);
+                        const messageData: MessageData = { method: MessageMethod.addUser, param: {} };
+                        if (cluster.isWorker) {
+                            process.send(messageData);
+                        } else {
+                            responseData(messageData, res);
+                        }
                     }
                 }
             })
@@ -133,9 +141,6 @@ export const createServer = async (req: http.IncomingMessage, res: http.ServerRe
             res404(res);
         }
     } catch {
-        if (cluster.isWorker) {
-            process.send({ method: 'error' });
-        }
         errorHandlerr(res);
     }
 
